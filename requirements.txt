@@ -1,0 +1,9 @@
+dotenv
+openai
+PyPDF2
+tiktoken
+tkc
+PyMuPDF
+pillow
+pytesseract
+tempfile2
