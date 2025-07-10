@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 import io
 import pytesseract
 import tempfile
+from Summarize import AISummarize
 
 
 class ArticleEntry(Frame):
@@ -105,6 +106,8 @@ class MagazineSplitter(tk.Tk):
         self.current_page = 0
         self.articles = {}  # Using a dict with IDs as keys
         self.next_article_id = 0
+
+        self.ai_summarize = AISummarize()
 
         # OCR option
         self.ocr_enabled = tk.BooleanVar(value=True)
@@ -450,6 +453,8 @@ class MagazineSplitter(tk.Tk):
                 # Update status
                 self.status_var.set(f"Generated: {safe_name}.pdf")
                 self.update()
+
+                self.ai_summarize.summarize(output_path)
 
             except Exception as e:
                 messagebox.showerror(
