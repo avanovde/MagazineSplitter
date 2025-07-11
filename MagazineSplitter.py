@@ -107,12 +107,12 @@ class MagazineSplitter(tk.Tk):
         self.articles = {}  # Using a dict with IDs as keys
         self.next_article_id = 0
 
-        self.ai_summarize = AISummarize()
-
         # OCR option
         self.ocr_enabled = tk.BooleanVar(value=True)
 
         self.setup_ui()
+
+        self.ai_summarize = AISummarize(self.set_status)
 
     def setup_ui(self):
         # Top frame for buttons
@@ -203,6 +203,10 @@ class MagazineSplitter(tk.Tk):
         self.status_bar = Label(
             self, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+
+    def set_status(self, status_message):
+        self.status_var.set(status_message)
+        self.update()
 
     def on_frame_configure(self, event=None):
         """Reset the scroll region to encompass the inner frame"""
@@ -371,6 +375,7 @@ class MagazineSplitter(tk.Tk):
         doc.close()
 
         self.status_var.set(f"OCR complete. PDF saved to {output_path}")
+        self.update()
 
     def generate_pdfs(self):
         if not self.pdf_document:
@@ -454,13 +459,13 @@ class MagazineSplitter(tk.Tk):
                 self.status_var.set(f"Generated: {safe_name}.pdf")
                 self.update()
 
-                self.ai_summarize.summarize(output_path)
-
             except Exception as e:
                 messagebox.showerror(
                     "Error", f"Failed to create PDF for '{article_data['name']}': {e}")
 
         if success_count > 0:
+            self.ai_summarize.summarize(output_dir)
+
             messagebox.showinfo(
                 "Success", f"Successfully generated {success_count} article PDFs in {output_dir}")
             self.status_var.set(
