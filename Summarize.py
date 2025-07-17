@@ -108,32 +108,24 @@ class AISummarize():
         self.set_status(f'Summary complete ({output_file})')
         time.sleep(2)
 
-    def summarize(self, folder_path: str):
-        self.set_status(f'Generating summaries for articles in {folder_path}')
-        exists = os.path.exists(folder_path)
-        for root, _, files in os.walk(folder_path):  # Traverse all subdirectories
-            for file in files:
-                if file.endswith(".pdf"):  # Process only PDF files
-                    pdf_path = os.path.join(root, file)
-                    self.set_status(f'Generating summary for {pdf_path}')
+    def summarize(self, pdf_path: str):
+        # Extract text from the PDF
+        text = self.extract_text_from_pdf(pdf_path)
+        if text == '':
+            self.build_ocr_pdf(pdf_path)
+            text = self.extract_text_from_pdf(pdf_path)
 
-                    # Extract text from the PDF
-                    text = self.extract_text_from_pdf(pdf_path)
-                    if text == '':
-                        self.build_ocr_pdf(pdf_path)
-                        text = self.extract_text_from_pdf(pdf_path)
+        # Step 1: Split the text into chunks
+        chunks = self.split_text(text, max_tokens=2000)
 
-                    # Step 1: Split the text into chunks
-                    chunks = self.split_text(text, max_tokens=2000)
+        # Step 2: Summarize each chunk
+        chunk_summaries = self.summarize_chunks(chunks)
 
-                    # Step 2: Summarize each chunk
-                    chunk_summaries = self.summarize_chunks(chunks)
+        # Step 3: Generate a final summary
+        final_summary = self.generate_final_summary(chunk_summaries)
+        if (final_summary == ''):
+            self.set_status(f'Unable to generate a summary for {pdf_path}')
 
-                    # Step 3: Generate a final summary
-                    final_summary = self.generate_final_summary(chunk_summaries)
-                    if (final_summary == ''):
-                        self.set_status(f'Unable to generate a summary for {pdf_path}')
-
-                    # Save the summary to a text file
-                    output_path = pdf_path.replace('.pdf', '.txt')
-                    self.save_summary_to_file(output_path, final_summary)
+        # Save the summary to a text file
+        output_path = pdf_path.replace('.pdf', '.txt')
+        self.save_summary_to_file(output_path, final_summary)
