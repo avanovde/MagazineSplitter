@@ -148,7 +148,7 @@ class MagazineSplitter(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Magazine Article Splitter")
-        self.geometry("1400x700")  # Made wider to accommodate larger article pane
+        self.geometry("1600x800")  # Made even wider and taller
 
         self.pdf_document = None
         self.current_page = 0
@@ -196,8 +196,8 @@ class MagazineSplitter(tk.Tk):
         content_frame = tk.Frame(self)
         content_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        # PDF viewer frame (left side)
-        viewer_frame = tk.Frame(content_frame, width=700)
+        # PDF viewer frame (left side) - adjusted width
+        viewer_frame = tk.Frame(content_frame, width=750)
         viewer_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Navigation frame
@@ -220,9 +220,10 @@ class MagazineSplitter(tk.Tk):
             viewer_frame, bd=1, relief=tk.SUNKEN, bg="gray")
         self.canvas.pack(fill=tk.BOTH, expand=True)
 
-        # Article list frame (right side) - made much wider
-        self.article_frame = tk.Frame(content_frame, width=650)
+        # Article list frame (right side) - made significantly wider
+        self.article_frame = tk.Frame(content_frame, width=800)  # Increased from 650 to 800
         self.article_frame.pack(side=tk.RIGHT, fill=tk.BOTH, padx=(10, 0))
+        self.article_frame.pack_propagate(False)  # Prevent shrinking
 
         # Article list label
         Label(self.article_frame, text="Articles", font=(
@@ -235,13 +236,15 @@ class MagazineSplitter(tk.Tk):
         self.canvas_frame.grid_rowconfigure(0, weight=1)
         self.canvas_frame.grid_columnconfigure(0, weight=1)
 
+        # Make the canvas wider by adjusting the scrollbar placement
         self.articles_canvas = tk.Canvas(
             self.canvas_frame, bd=0, highlightthickness=0)
-        self.articles_canvas.grid(row=0, column=0, sticky="news")
+        self.articles_canvas.grid(row=0, column=0, sticky="nsew")
 
+        # Place scrollbar with better spacing
         self.scrollbar = Scrollbar(
             self.canvas_frame, orient="vertical", command=self.articles_canvas.yview)
-        self.scrollbar.grid(row=0, column=1, sticky="ns")
+        self.scrollbar.grid(row=0, column=1, sticky="ns", padx=(5, 0))
         self.articles_canvas.configure(yscrollcommand=self.scrollbar.set)
 
         # Frame inside canvas for article entries
@@ -250,12 +253,19 @@ class MagazineSplitter(tk.Tk):
             (0, 0), window=self.articles_container, anchor="nw", tags="self.articles_container")
 
         self.articles_container.bind("<Configure>", self.on_frame_configure)
+        self.articles_canvas.bind("<Configure>", self.on_canvas_configure)
 
         # Status bar
         self.status_var = tk.StringVar()
         self.status_bar = Label(
             self, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+
+    def on_canvas_configure(self, event):
+        """Handle canvas resize to update the scrollable window width"""
+        # Update the width of the scrollable window to match the canvas width
+        canvas_width = event.width
+        self.articles_canvas.itemconfig("self.articles_container", width=canvas_width)
 
     def process_queue(self):
         """Process messages from background threads"""
